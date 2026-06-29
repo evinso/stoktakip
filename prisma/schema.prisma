@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Kategori {
+  id        Int       @id @default(autoincrement())
+  ad        String    @unique
+  renk      String    @default("#6366f1")
+  createdAt DateTime  @default(now())
+  urunler   Urun[]
+}
+
+model Urun {
+  id              Int            @id @default(autoincrement())
+  ad              String
+  barkod          String?        @unique
+  aciklama        String?
+  fiyat           Float
+  alisFiyati      Float          @default(0)
+  stok            Int            @default(0)
+  minStok         Int            @default(5)
+  birim           String         @default("adet")
+  resimUrl        String?
+  aktif           Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  kategoriId      Int?
+  kategori        Kategori?      @relation(fields: [kategoriId], references: [id])
+  stokHareketleri StokHareketi[]
+  satisKalemleri  SatisKalemi[]
+}
+
+model StokHareketi {
+  id         Int      @id @default(autoincrement())
+  urunId     Int
+  tur        String
+  miktar     Int
+  oncekiStok Int
+  yeniStok   Int
+  aciklama   String?
+  createdAt  DateTime @default(now())
+  urun       Urun     @relation(fields: [urunId], references: [id])
+}
+
+model Satis {
+  id          Int           @id @default(autoincrement())
+  toplamTutar Float
+  odemeTuru   String        @default("NAKIT")
+  indirim     Float         @default(0)
+  alinanPara  Float         @default(0)
+  paraUstu    Float         @default(0)
+  not         String?
+  createdAt   DateTime      @default(now())
+  kalemler    SatisKalemi[]
+}
+
+model SatisKalemi {
+  id         Int   @id @default(autoincrement())
+  satisId    Int
+  urunId     Int
+  adet       Int
+  birimFiyat Float
+  toplam     Float
+  satis      Satis @relation(fields: [satisId], references: [id])
+  urun       Urun  @relation(fields: [urunId], references: [id])
+}
