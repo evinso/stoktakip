@@ -304,48 +304,53 @@ export default function POSSayfasi() {
               <p className="text-sm mt-1">Sol taraftan ürünlere tıklayın</p>
             </div>
           ) : (
-            <div className="p-4 space-y-2">
+            <div className="p-3 space-y-2">
               {sepet.map((k) => (
-                <div key={k.urun.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{k.urun.ad}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-xs text-indigo-600 font-bold">{fmt(k.urun.fiyat)}</p>
-                      <span className="text-slate-300">×</span>
-                      <p className="text-xs text-slate-500">{k.adet}</p>
-                      <span className="text-slate-300">=</span>
-                      <p className="text-xs font-bold text-slate-700">{fmt(k.urun.fiyat * k.adet)}</p>
+                <div key={k.urun.id} className="rounded-xl bg-white border-2 border-slate-200 shadow-sm overflow-hidden">
+                  {/* Ürün adı satırı */}
+                  <div className="flex items-center justify-between px-3 pt-3 pb-1 gap-2">
+                    <p className="font-bold text-slate-900 text-sm leading-tight flex-1 min-w-0">{k.urun.ad}</p>
+                    <button
+                      onClick={() => sepettenKaldir(k.urun.id)}
+                      className="shrink-0 w-6 h-6 rounded-lg bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 flex items-center justify-center transition-colors"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                  {/* Fiyat + adet kontrolü */}
+                  <div className="flex items-center justify-between px-3 pb-3 gap-3">
+                    <div>
+                      <p className="text-xs text-slate-400">Birim fiyat</p>
+                      <p className="text-sm font-bold text-indigo-600">{fmt(k.urun.fiyat)}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => adetAyarla(k.urun.id, -1)}
+                        className="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center justify-center transition-colors font-bold text-slate-700"
+                      >
+                        <Minus size={14} />
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        max={k.urun.stok}
+                        value={k.adet}
+                        onChange={(e) => adetDirektGir(k.urun.id, e.target.value)}
+                        className="w-12 text-center text-base font-black text-slate-900 border-2 border-slate-200 rounded-lg py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                      />
+                      <button
+                        onClick={() => adetAyarla(k.urun.id, 1)}
+                        disabled={k.adet >= k.urun.stok}
+                        className="w-8 h-8 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-30 rounded-lg flex items-center justify-center transition-colors text-white"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-slate-400">Toplam</p>
+                      <p className="text-sm font-black text-slate-900">{fmt(k.urun.fiyat * k.adet)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => adetAyarla(k.urun.id, -1)}
-                      className="w-7 h-7 bg-slate-200 hover:bg-slate-300 rounded-lg flex items-center justify-center transition-colors"
-                    >
-                      <Minus size={12} />
-                    </button>
-                    <input
-                      type="number"
-                      min={1}
-                      max={k.urun.stok}
-                      value={k.adet}
-                      onChange={(e) => adetDirektGir(k.urun.id, e.target.value)}
-                      className="w-10 text-center text-sm font-bold border border-slate-200 rounded-lg py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                    />
-                    <button
-                      onClick={() => adetAyarla(k.urun.id, 1)}
-                      disabled={k.adet >= k.urun.stok}
-                      className="w-7 h-7 bg-indigo-100 hover:bg-indigo-200 disabled:opacity-30 rounded-lg flex items-center justify-center transition-colors text-indigo-700"
-                    >
-                      <Plus size={12} />
-                    </button>
-                  </div>
-                  <button
-                    onClick={() => sepettenKaldir(k.urun.id)}
-                    className="text-slate-300 hover:text-red-500 transition-colors ml-1"
-                  >
-                    <Trash2 size={15} />
-                  </button>
                 </div>
               ))}
             </div>
