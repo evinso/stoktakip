@@ -212,10 +212,8 @@ export default function UrunForm({ varsayilan, onKaydet, baslik, geriUrl = "/uru
 
       {kameraAcik && (
         <BarcodeScanner
-          onSonuc={(barkod) => {
-            setForm((p) => ({ ...p, barkod }));
-            setKameraAcik(false);
-          }}
+          tekSeferlik
+          onSonuc={(barkod) => setForm((p) => ({ ...p, barkod }))}
           onKapat={() => setKameraAcik(false)}
         />
       )}

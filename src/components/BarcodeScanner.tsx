@@ -1,18 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { X, Camera, Loader2 } from "lucide-react";
+import { X, Camera, Loader2, CheckCircle2 } from "lucide-react";
 
 interface BarcodeScannerProps {
   onSonuc: (barkod: string) => void;
   onKapat: () => void;
+  /** Taramadan sonra kamerayı kapat (varsayılan: false = açık kal) */
+  tekSeferlik?: boolean;
 }
 
-export default function BarcodeScanner({ onSonuc, onKapat }: BarcodeScannerProps) {
+export default function BarcodeScanner({ onSonuc, onKapat, tekSeferlik = false }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [durum, setDurum] = useState<"baslıyor" | "tarama" | "hata">("baslıyor");
   const [hataMesaj, setHataMesaj] = useState("");
+  const [sonOkunan, setSonOkunan] = useState("");
   const kontrolRef = useRef<{ stop: () => void } | null>(null);
+  // Son başarılı okuma: barkod + zaman damgası
+  const sonTaramaRef = useRef<{ barkod: string; zaman: number } | null>(null);
 
   useEffect(() => {
     let aktif = true;
@@ -31,12 +36,12 @@ export default function BarcodeScanner({ onSonuc, onKapat }: BarcodeScannerProps
           return;
         }
 
-        // Arka kamerayı tercih et
-        const arkaKamera = cihazlar.find((c) =>
-          c.label.toLowerCase().includes("back") ||
-          c.label.toLowerCase().includes("arka") ||
-          c.label.toLowerCase().includes("environment")
-        ) ?? cihazlar[cihazlar.length - 1];
+        const arkaKamera =
+          cihazlar.find((c) =>
+            c.label.toLowerCase().includes("back") ||
+            c.label.toLowerCase().includes("arka") ||
+            c.label.toLowerCase().includes("environment")
+          ) ?? cihazlar[cihazlar.length - 1];
 
         setDurum("tarama");
 
@@ -44,9 +49,24 @@ export default function BarcodeScanner({ onSonuc, onKapat }: BarcodeScannerProps
           arkaKamera.deviceId,
           videoRef.current!,
           (sonuc) => {
-            if (!aktif) return;
-            if (sonuc) {
-              onSonuc(sonuc.getText());
+            if (!aktif || !sonuc) return;
+            const barkod = sonuc.getText();
+            const simdi = Date.now();
+            const son = sonTaramaRef.current;
+
+            // Aynı barkod 1.5 saniye içinde tekrar geldiyse yok say
+            if (son && son.barkod === barkod && simdi - son.zaman < 1500) return;
+
+            sonTaramaRef.current = { barkod, zaman: simdi };
+            setSonOkunan(barkod);
+            setTimeout(() => setSonOkunan(""), 1200);
+
+            onSonuc(barkod);
+
+            if (tekSeferlik) {
+              aktif = false;
+              try { kontrol.stop(); } catch { /* ignore */ }
+              onKapat();
             }
           }
         );
@@ -55,7 +75,9 @@ export default function BarcodeScanner({ onSonuc, onKapat }: BarcodeScannerProps
         if (!aktif) return;
         const msg = e instanceof Error ? e.message : String(e);
         setDurum("hata");
-        setHataMesaj(msg.includes("Permission") ? "Kamera izni reddedildi." : "Kamera açılamadı: " + msg);
+        setHataMesaj(
+          msg.includes("Permission") ? "Kamera izni reddedildi." : "Kamera açılamadı: " + msg
+        );
       }
     };
 
@@ -65,7 +87,7 @@ export default function BarcodeScanner({ onSonuc, onKapat }: BarcodeScannerProps
       aktif = false;
       try { kontrolRef.current?.stop(); } catch { /* ignore */ }
     };
-  }, [onSonuc]);
+  }, [onSonuc, onKapat, tekSeferlik]);
 
   return (
     <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
@@ -89,14 +111,22 @@ export default function BarcodeScanner({ onSonuc, onKapat }: BarcodeScannerProps
           {durum === "tarama" && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-64 h-36 relative">
-                {/* Köşe çizgileri */}
                 {["top-0 left-0", "top-0 right-0", "bottom-0 left-0", "bottom-0 right-0"].map((pos, i) => (
-                  <div key={i} className={`absolute w-6 h-6 border-indigo-400 border-2 ${pos} ${
-                    pos.includes("right") ? "border-l-0" : "border-r-0"
-                  } ${pos.includes("bottom") ? "border-t-0" : "border-b-0"}`} />
+                  <div key={i} className={`absolute w-6 h-6 border-2 ${sonOkunan ? "border-emerald-400" : "border-indigo-400"} ${pos}
+                    ${pos.includes("right") ? "border-l-0" : "border-r-0"}
+                    ${pos.includes("bottom") ? "border-t-0" : "border-b-0"} transition-colors`} />
                 ))}
-                {/* Tarama çizgisi animasyonu */}
-                <div className="absolute inset-x-0 h-0.5 bg-indigo-400/80 animate-bounce top-1/2" />
+                <div className={`absolute inset-x-0 h-0.5 animate-bounce top-1/2 transition-colors ${sonOkunan ? "bg-emerald-400/80" : "bg-indigo-400/80"}`} />
+              </div>
+            </div>
+          )}
+
+          {/* Başarı bildirimi */}
+          {sonOkunan && (
+            <div className="absolute inset-x-0 bottom-3 flex justify-center pointer-events-none">
+              <div className="bg-emerald-600 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg">
+                <CheckCircle2 size={16} />
+                {sonOkunan}
               </div>
             </div>
           )}
@@ -119,7 +149,9 @@ export default function BarcodeScanner({ onSonuc, onKapat }: BarcodeScannerProps
         </div>
 
         <div className="px-5 py-3 text-center text-xs text-slate-400 bg-slate-50">
-          Barkodu kamera çerçevesine tutun — otomatik okunur
+          {tekSeferlik
+            ? "Barkodu okutun — otomatik kapanır"
+            : "Barkodu okutun — her taramada adet artar · Kapatmak için ✕"}
         </div>
       </div>
     </div>

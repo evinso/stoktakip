@@ -186,7 +186,6 @@ export default function POSSayfasi() {
   };
 
   const barkodTaraVeSepeteEkle = (barkod: string) => {
-    setKameraAcik(false);
     const urun = urunler.find((u) => u.barkod === barkod);
     if (urun) {
       sepeteEkle(urun);
