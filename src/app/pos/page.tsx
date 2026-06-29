@@ -358,45 +358,40 @@ export default function POSSayfasi() {
         </div>
 
         {sepet.length > 0 && (
-          <div className="border-t border-slate-100 bg-white">
-            {/* Ara Toplam / İndirim */}
-            <div className="px-5 pt-4 pb-3 space-y-2">
+          <div className="flex flex-col shrink-0">
+
+            {/* ══ BÖLÜM 1: TUTAR ÖZETİ ══ */}
+            <div className="border-t-2 border-slate-200 bg-white px-5 pt-4 pb-4 space-y-2">
               <div className="flex justify-between text-sm text-slate-500">
                 <span>Ara Toplam</span>
                 <span className="font-medium">{fmt(araToplam)}</span>
               </div>
-
-              {/* İndirim */}
               <div className="flex items-center gap-2">
                 <Tag size={13} className="text-slate-400 shrink-0" />
                 <label className="text-sm text-slate-500 w-20 shrink-0">İndirim (₺)</label>
                 <input
-                  type="number"
-                  min="0"
-                  max={araToplam}
-                  value={indirim}
+                  type="number" min="0" max={araToplam} value={indirim}
                   onChange={(e) => setIndirim(e.target.value)}
                   className="flex-1 px-2 py-1 border border-slate-200 rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   placeholder="0.00"
                 />
               </div>
-
               {indirimTutar > 0 && (
                 <div className="flex justify-between text-sm text-emerald-600 font-medium">
-                  <span>İndirim</span>
-                  <span>-{fmt(indirimTutar)}</span>
+                  <span>İndirim</span><span>-{fmt(indirimTutar)}</span>
                 </div>
               )}
-
-              <div className="flex justify-between text-lg font-bold text-slate-900 border-t border-slate-100 pt-2">
-                <span>Toplam</span>
-                <span className="text-indigo-600">{fmt(toplamTutar)}</span>
+              <div className="flex justify-between items-center bg-indigo-600 rounded-xl px-4 py-3">
+                <span className="text-sm font-bold text-indigo-200">Ödenecek Toplam</span>
+                <span className="text-2xl font-black text-white">{fmt(toplamTutar)}</span>
               </div>
             </div>
 
-            {/* Ödeme Yöntemi */}
-            <div className="px-5 pb-3">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Ödeme Yöntemi</p>
+            {/* ══ BÖLÜM 2: ÖDEME ══ */}
+            <div className="bg-slate-800 px-5 pt-4 pb-5 space-y-3">
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Ödeme Yöntemi</p>
+
+              {/* Yöntem Seçimi */}
               <div className="grid grid-cols-3 gap-2">
                 {(["NAKIT", "KART", "PARCALI"] as OdemeTuru[]).map((tur) => {
                   const Icon = tur === "NAKIT" ? Banknote : tur === "KART" ? CreditCard : SplitSquareHorizontal;
@@ -405,10 +400,10 @@ export default function POSSayfasi() {
                     <button
                       key={tur}
                       onClick={() => setOdemeTuru(tur)}
-                      className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 text-xs font-semibold transition-all ${
+                      className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 text-xs font-bold transition-all ${
                         odemeTuru === tur
-                          ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
-                          : "bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-300"
+                          ? "bg-indigo-500 text-white border-indigo-400"
+                          : "bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400"
                       }`}
                     >
                       <Icon size={18} />
@@ -417,145 +412,96 @@ export default function POSSayfasi() {
                   );
                 })}
               </div>
-            </div>
 
-            {/* Ödeme Detayları */}
-            <div className="px-5 pb-3 space-y-2">
+              {/* Nakit detayı */}
               {odemeTuru === "NAKIT" && (
-                <div className="bg-amber-50 rounded-xl p-3 space-y-2">
+                <div className="bg-slate-700 rounded-xl p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <label className="text-sm text-slate-600 w-28 shrink-0">Alınan Para (₺)</label>
+                    <label className="text-sm text-slate-300 w-28 shrink-0">Alınan Para (₺)</label>
                     <input
-                      type="number"
-                      min={0}
-                      value={alinanPara}
+                      type="number" min={0} value={alinanPara}
                       onChange={(e) => setAlinanPara(e.target.value)}
-                      className="flex-1 px-3 py-1.5 border border-amber-200 rounded-lg text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+                      className="flex-1 px-3 py-2 rounded-lg text-sm font-bold text-right bg-slate-900 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400"
                       placeholder={toplamTutar.toFixed(2)}
                     />
                   </div>
-                  {/* Hızlı tuşlar */}
                   <div className="flex gap-1.5 flex-wrap">
-                    {[50, 100, 200, 500].map((tutar) => (
-                      <button
-                        key={tutar}
-                        onClick={() => setAlinanPara(tutar.toString())}
-                        className="px-2.5 py-1 bg-white border border-amber-200 rounded-lg text-xs font-medium text-amber-700 hover:bg-amber-100 transition-colors"
-                      >
-                        ₺{tutar}
+                    {[50, 100, 200, 500].map((t) => (
+                      <button key={t} onClick={() => setAlinanPara(t.toString())}
+                        className="px-3 py-1 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs font-bold text-slate-200 transition-colors">
+                        ₺{t}
                       </button>
                     ))}
-                    <button
-                      onClick={() => setAlinanPara(toplamTutar.toFixed(2))}
-                      className="px-2.5 py-1 bg-amber-200 rounded-lg text-xs font-bold text-amber-900 hover:bg-amber-300 transition-colors"
-                    >
+                    <button onClick={() => setAlinanPara(toplamTutar.toFixed(2))}
+                      className="px-3 py-1 bg-amber-500 hover:bg-amber-400 rounded-lg text-xs font-bold text-white transition-colors">
                       Tam
                     </button>
                   </div>
                   {paraUstu > 0 && (
-                    <div className="flex justify-between text-sm font-bold text-emerald-700 bg-emerald-50 rounded-lg px-3 py-1.5">
-                      <span>Para Üstü</span>
-                      <span>{fmt(paraUstu)}</span>
+                    <div className="flex justify-between text-sm font-bold text-emerald-400 bg-slate-900 rounded-lg px-3 py-2">
+                      <span>Para Üstü</span><span>{fmt(paraUstu)}</span>
                     </div>
                   )}
                 </div>
               )}
 
+              {/* Kart detayı */}
               {odemeTuru === "KART" && (
-                <div className="bg-blue-50 rounded-xl p-3 text-center text-sm text-blue-700 font-medium">
-                  <CreditCard size={20} className="mx-auto mb-1 text-blue-500" />
-                  Kart ile ödeme: {fmt(toplamTutar)}
+                <div className="bg-slate-700 rounded-xl p-3 flex items-center gap-3">
+                  <CreditCard size={22} className="text-blue-400 shrink-0" />
+                  <div>
+                    <p className="text-xs text-slate-400">Kart ile tahsil edilecek</p>
+                    <p className="text-lg font-black text-white">{fmt(toplamTutar)}</p>
+                  </div>
                 </div>
               )}
 
+              {/* Parçalı detay */}
               {odemeTuru === "PARCALI" && (
-                <div className="bg-purple-50 rounded-xl p-3 space-y-2">
-                  <p className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Parçalı Ödeme Dağılımı</p>
-
+                <div className="bg-slate-700 rounded-xl p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <Banknote size={14} className="text-amber-500 shrink-0" />
-                    <label className="text-sm text-slate-600 w-16 shrink-0">Nakit (₺)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={pNakit}
-                      onChange={(e) => {
-                        setPNakit(e.target.value);
-                        const n = parseFloat(e.target.value || "0");
-                        const kalan = Math.max(0, toplamTutar - n);
-                        setPKart(kalan.toFixed(2));
-                      }}
-                      className="flex-1 px-3 py-1.5 border border-purple-200 rounded-lg text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
-                      placeholder="0.00"
-                    />
+                    <Banknote size={14} className="text-amber-400 shrink-0" />
+                    <label className="text-sm text-slate-300 w-16 shrink-0">Nakit (₺)</label>
+                    <input type="number" min={0} value={pNakit}
+                      onChange={(e) => { setPNakit(e.target.value); const n = parseFloat(e.target.value || "0"); setPKart(Math.max(0, toplamTutar - n).toFixed(2)); }}
+                      className="flex-1 px-3 py-2 rounded-lg text-sm font-bold text-right bg-slate-900 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      placeholder="0.00" />
                   </div>
-
                   <div className="flex items-center gap-2">
-                    <CreditCard size={14} className="text-blue-500 shrink-0" />
-                    <label className="text-sm text-slate-600 w-16 shrink-0">Kart (₺)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      value={pKart}
-                      onChange={(e) => {
-                        setPKart(e.target.value);
-                        const k = parseFloat(e.target.value || "0");
-                        const kalan = Math.max(0, toplamTutar - k);
-                        setPNakit(kalan.toFixed(2));
-                      }}
-                      className="flex-1 px-3 py-1.5 border border-purple-200 rounded-lg text-sm font-bold text-right focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
-                      placeholder="0.00"
-                    />
+                    <CreditCard size={14} className="text-blue-400 shrink-0" />
+                    <label className="text-sm text-slate-300 w-16 shrink-0">Kart (₺)</label>
+                    <input type="number" min={0} value={pKart}
+                      onChange={(e) => { setPKart(e.target.value); const k = parseFloat(e.target.value || "0"); setPNakit(Math.max(0, toplamTutar - k).toFixed(2)); }}
+                      className="flex-1 px-3 py-2 rounded-lg text-sm font-bold text-right bg-slate-900 text-white border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      placeholder="0.00" />
                   </div>
-
-                  {/* Hızlı böl */}
                   <div className="flex gap-1.5">
-                    {[25, 50, 75].map((yuzde) => (
-                      <button
-                        key={yuzde}
-                        onClick={() => {
-                          const n = (toplamTutar * yuzde) / 100;
-                          setPNakit(n.toFixed(2));
-                          setPKart((toplamTutar - n).toFixed(2));
-                        }}
-                        className="flex-1 py-1 bg-white border border-purple-200 rounded-lg text-xs font-medium text-purple-700 hover:bg-purple-100 transition-colors"
-                      >
-                        %{yuzde} Nakit
+                    {[25, 50, 75].map((y) => (
+                      <button key={y} onClick={() => { const n = (toplamTutar * y) / 100; setPNakit(n.toFixed(2)); setPKart((toplamTutar - n).toFixed(2)); }}
+                        className="flex-1 py-1 bg-slate-600 hover:bg-slate-500 rounded-lg text-xs font-bold text-slate-200 transition-colors">
+                        %{y} Nakit
                       </button>
                     ))}
                   </div>
-
-                  {/* Özet */}
-                  <div className="bg-white rounded-lg p-2 space-y-1 text-xs border border-purple-100">
-                    <div className="flex justify-between text-amber-600">
-                      <span>Nakit</span><span className="font-bold">{fmt(parcaliNakit)}</span>
-                    </div>
-                    <div className="flex justify-between text-blue-600">
-                      <span>Kart</span><span className="font-bold">{fmt(parcaliKart)}</span>
-                    </div>
-                    <div className={`flex justify-between font-bold pt-1 border-t ${parcaliEksik ? "text-red-500" : "text-emerald-600"}`}>
-                      <span>{parcaliEksik ? "Eksik" : "Para Üstü"}</span>
-                      <span>{parcaliEksik ? `-${fmt(toplamTutar - parcaliToplam)}` : fmt(parcaliParaUstu)}</span>
-                    </div>
+                  <div className={`flex justify-between text-sm font-bold rounded-lg px-3 py-2 ${parcaliEksik ? "bg-red-900/40 text-red-400" : "bg-slate-900 text-emerald-400"}`}>
+                    <span>{parcaliEksik ? "Eksik" : "Para Üstü"}</span>
+                    <span>{parcaliEksik ? `-${fmt(toplamTutar - parcaliToplam)}` : fmt(parcaliParaUstu)}</span>
                   </div>
                 </div>
               )}
-            </div>
 
-            {/* Tamamla Butonu */}
-            <div className="px-5 pb-5">
+              {/* Tamamla */}
               <button
                 onClick={satisTamamla}
                 disabled={islemde || sepet.length === 0 || (odemeTuru !== "KART" && !odemeTamamMi)}
-                className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-2xl font-bold text-base transition-colors shadow-lg"
+                className="w-full py-4 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed text-white rounded-2xl font-black text-lg transition-colors shadow-lg"
               >
-                {islemde
-                  ? "İşleniyor..."
-                  : odemeTuru === "PARCALI" && parcaliEksik
+                {islemde ? "İşleniyor..." : odemeTuru === "PARCALI" && parcaliEksik
                   ? `Eksik: ${fmt(toplamTutar - parcaliToplam)}`
                   : `Satışı Tamamla — ${fmt(toplamTutar)}`}
               </button>
             </div>
+
           </div>
         )}
       </div>
