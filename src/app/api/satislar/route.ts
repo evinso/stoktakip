@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { kalemler, odemeTuru, indirim, alinanPara } = await req.json();
+  const { kalemler, odemeTuru, indirim, alinanPara, nakitTutar, kartTutar } = await req.json();
 
   if (!kalemler || kalemler.length === 0) {
     return NextResponse.json({ error: "Sepet boş" }, { status: 400 });
@@ -34,16 +34,33 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  let araToplam = 0;
-  for (const kalem of kalemler) {
+  const araToplam = kalemler.reduce((t: number, kalem: { urunId: number; adet: number }) => {
     const urun = urunler.find((u) => u.id === kalem.urunId)!;
-    araToplam += urun.fiyat * kalem.adet;
-  }
+    return t + urun.fiyat * kalem.adet;
+  }, 0);
 
   const toplamIndirim = parseFloat(indirim ?? 0);
-  const toplamTutar = araToplam - toplamIndirim;
-  const alinan = parseFloat(alinanPara ?? toplamTutar);
-  const paraUstu = alinan - toplamTutar;
+  const toplamTutar = Math.max(0, araToplam - toplamIndirim);
+
+  // Ödeme hesapları
+  let hesapNakit = 0;
+  let hesapKart = 0;
+  let hesapAlinan = toplamTutar;
+  let hesapParaUstu = 0;
+
+  if (odemeTuru === "PARCALI") {
+    hesapNakit = parseFloat(nakitTutar ?? 0);
+    hesapKart = parseFloat(kartTutar ?? 0);
+    hesapAlinan = hesapNakit + hesapKart;
+    hesapParaUstu = Math.max(0, hesapNakit - (toplamTutar - hesapKart));
+  } else if (odemeTuru === "NAKIT") {
+    hesapNakit = parseFloat(alinanPara ?? toplamTutar);
+    hesapAlinan = hesapNakit;
+    hesapParaUstu = Math.max(0, hesapNakit - toplamTutar);
+  } else {
+    hesapKart = toplamTutar;
+    hesapAlinan = toplamTutar;
+  }
 
   const satis = await prisma.$transaction(async (tx) => {
     const yeniSatis = await tx.satis.create({
@@ -51,8 +68,10 @@ export async function POST(req: NextRequest) {
         toplamTutar,
         odemeTuru: odemeTuru ?? "NAKIT",
         indirim: toplamIndirim,
-        alinanPara: alinan,
-        paraUstu,
+        alinanPara: hesapAlinan,
+        paraUstu: hesapParaUstu,
+        nakitTutar: hesapNakit,
+        kartTutar: hesapKart,
         kalemler: {
           create: kalemler.map((kalem: { urunId: number; adet: number }) => {
             const urun = urunler.find((u) => u.id === kalem.urunId)!;

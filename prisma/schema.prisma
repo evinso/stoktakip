@@ -53,6 +53,8 @@ model Satis {
   indirim     Float         @default(0)
   alinanPara  Float         @default(0)
   paraUstu    Float         @default(0)
+  nakitTutar  Float         @default(0)
+  kartTutar   Float         @default(0)
   not         String?
   createdAt   DateTime      @default(now())
   kalemler    SatisKalemi[]
