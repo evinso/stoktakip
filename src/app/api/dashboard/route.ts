@@ -15,7 +15,7 @@ export async function GET() {
   ] = await Promise.all([
     prisma.urun.count({ where: { aktif: true } }),
     prisma.$queryRaw<Array<{ id: number; ad: string; stok: number; minStok: number; birim: string }>>`
-      SELECT id, ad, stok, minStok, birim FROM Urun WHERE aktif = 1 AND stok <= minStok LIMIT 5
+      SELECT id, ad, stok, "minStok", birim FROM "Urun" WHERE aktif = true AND stok <= "minStok" LIMIT 5
     `,
     prisma.satis.aggregate({
       where: { createdAt: { gte: bugun } },
