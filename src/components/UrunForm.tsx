@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Camera, Wand2, RefreshCw } from "lucide-react";
+import BarcodeScanner from "./BarcodeScanner";
 
 interface Kategori {
   id: number;
@@ -34,6 +35,16 @@ export default function UrunForm({ varsayilan, onKaydet, baslik, geriUrl = "/uru
   const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
   const [kaydediyor, setKaydediyor] = useState(false);
   const [hata, setHata] = useState("");
+  const [kameraAcik, setKameraAcik] = useState(false);
+
+  const otomatikBarkod = () => {
+    // EAN-13 formatında 12 rastgele rakam + check digit
+    const rakamlar = Array.from({ length: 12 }, () => Math.floor(Math.random() * 10));
+    const kontrol = rakamlar.reduce((t, d, i) => t + d * (i % 2 === 0 ? 1 : 3), 0);
+    const checkDigit = (10 - (kontrol % 10)) % 10;
+    const barkod = [...rakamlar, checkDigit].join("");
+    setForm((p) => ({ ...p, barkod }));
+  };
 
   const [form, setForm] = useState({
     ad: varsayilan?.ad ?? "",
@@ -103,9 +114,25 @@ export default function UrunForm({ varsayilan, onKaydet, baslik, geriUrl = "/uru
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Barkod</label>
-              <input name="barkod" value={form.barkod} onChange={degistir}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
-                placeholder="Barkod numarası" />
+              <div className="flex gap-2">
+                <input name="barkod" value={form.barkod} onChange={degistir}
+                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
+                  placeholder="Barkod numarası" />
+                <button type="button" onClick={() => setKameraAcik(true)}
+                  title="Kamera ile tara"
+                  className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg text-indigo-600 transition-colors flex items-center gap-1 text-xs font-medium shrink-0">
+                  <Camera size={15} /> Tara
+                </button>
+                <button type="button" onClick={otomatikBarkod}
+                  title="Otomatik barkod oluştur"
+                  className="px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-slate-600 transition-colors flex items-center gap-1 text-xs font-medium shrink-0">
+                  {form.barkod ? <RefreshCw size={13} /> : <Wand2 size={13} />}
+                  {form.barkod ? "Yenile" : "Oluştur"}
+                </button>
+              </div>
+              {form.barkod && (
+                <p className="mt-1 text-xs text-slate-400 font-mono">{form.barkod}</p>
+              )}
             </div>
           </div>
 
@@ -182,6 +209,16 @@ export default function UrunForm({ varsayilan, onKaydet, baslik, geriUrl = "/uru
           </button>
         </div>
       </form>
+
+      {kameraAcik && (
+        <BarcodeScanner
+          onSonuc={(barkod) => {
+            setForm((p) => ({ ...p, barkod }));
+            setKameraAcik(false);
+          }}
+          onKapat={() => setKameraAcik(false)}
+        />
+      )}
     </div>
   );
 }

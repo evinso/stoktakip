@@ -13,7 +13,9 @@ import {
   X,
   SplitSquareHorizontal,
   Tag,
+  Camera,
 } from "lucide-react";
+import BarcodeScanner from "@/components/BarcodeScanner";
 
 interface Urun {
   id: number;
@@ -58,6 +60,8 @@ export default function POSSayfasi() {
   const [islemde, setIslemde] = useState(false);
   const [sonuc, setSonuc] = useState<SonucModal | null>(null);
   const [aktifKategori, setAktifKategori] = useState<string>("Tümü");
+  const [kameraAcik, setKameraAcik] = useState(false);
+  const [barkodUyari, setBarkodUyari] = useState("");
 
   useEffect(() => {
     fetch("/api/urunler")
@@ -181,6 +185,18 @@ export default function POSSayfasi() {
     }
   };
 
+  const barkodTaraVeSepeteEkle = (barkod: string) => {
+    setKameraAcik(false);
+    const urun = urunler.find((u) => u.barkod === barkod);
+    if (urun) {
+      sepeteEkle(urun);
+      setBarkodUyari("");
+    } else {
+      setBarkodUyari(`"${barkod}" barkodlu ürün bulunamadı.`);
+      setTimeout(() => setBarkodUyari(""), 3000);
+    }
+  };
+
   const fmt = (n: number) =>
     new Intl.NumberFormat("tr-TR", { style: "currency", currency: "TRY" }).format(n);
 
@@ -202,7 +218,16 @@ export default function POSSayfasi() {
                 placeholder="Ürün adı veya barkod..."
                 className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-sm" />
             </div>
+            <button onClick={() => setKameraAcik(true)}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm">
+              <Camera size={16} /> Barkod Tara
+            </button>
           </div>
+          {barkodUyari && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-2">
+              {barkodUyari}
+            </div>
+          )}
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none shrink-0">
             {kategoriler.map((kat) => (
               <button key={kat} onClick={() => setAktifKategori(kat)}
@@ -443,6 +468,14 @@ export default function POSSayfasi() {
 
         </div>
       </div>
+
+      {/* Kamera Barkod Tarayıcı */}
+      {kameraAcik && (
+        <BarcodeScanner
+          onSonuc={barkodTaraVeSepeteEkle}
+          onKapat={() => setKameraAcik(false)}
+        />
+      )}
 
       {/* Başarı Modalı */}
       {sonuc && (
